@@ -9,3 +9,5 @@ Description: Performs model selection of CDMs using reversible jump MCMC
 License: GPL (>= 2)
 Imports: Rcpp (>= 1.1.0), stats, tmvtnorm, pgdraw
 LinkingTo: Rcpp, RcppEigen
+URL: https://github.com/darthur2/rjcdm
+BugReports: https://github.com/darthur2/rjcdm/issues
