@@ -1,0 +1,11 @@
+Package: rjcdm
+Type: Package
+Title: Reversible Jump MCMC for Item-Level Model Selection of CDMs
+Version: 1.0
+Date: 2026-03-31
+Author: David Arthur
+Maintainer: David Arthur <dbarthur@uw.edu>
+Description: Performs model selection of CDMs using reversible jump MCMC
+License: GPL (>= 2)
+Imports: Rcpp (>= 1.1.0), stats, tmvtnorm, pgdraw
+LinkingTo: Rcpp, RcppEigen

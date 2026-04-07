@@ -1,0 +1,201 @@
+---
+title: "rjmcmc"
+output: html_document
+---
+
+
+# Model
+
+$$\begin{align}
+y_{ij} | m_j, \boldsymbol{z}_i, \boldsymbol{\beta}_j^{(m_j)} &\sim \text{Bernoulli}\left(\theta_{ij}\right) \\
+\boldsymbol{\beta}_j^{(m_j)} &\sim \mathcal{TN}\left(\boldsymbol{\mu}^{(m_j)}, \sigma^2 I, \boldsymbol{l}^{(m_j)}, \boldsymbol{u}^{(m_j)}\right) \\
+\boldsymbol{z}_i \mid \boldsymbol{p} &\sim \text{Multinomial}\left(1, \boldsymbol{p}\right) \\
+\boldsymbol{p} &\sim \text{Dirichlet}\left(\boldsymbol{\delta}\right) \\
+m &\sim \text{Categorical}\left(\boldsymbol{\pi}\right)
+\end{align}$$
+
+# Functions
+
+$$\begin{align}
+\theta_{ij} &= \prod_{c} \left[\frac{\exp \left\{\boldsymbol{a}_{cj}^{(m_j)}\boldsymbol{\beta}_j^{(m_j)}\right\}}{1+\exp \left\{\boldsymbol{a}_{cj}^{(m_j)}\boldsymbol{\beta}_j^{(m_j)}\right\}}\right]^{z_{ic}} \\
+\boldsymbol{a}_{cj}^{(m_j)} &= f^{(m_j)}\left(\boldsymbol{q}_j, \boldsymbol{\alpha}_c\right) \\
+\end{align}$$
+
+# Likelihood
+
+$$\begin{align}
+\mathcal{L}
+&= \prod_i \prod_j \left(\theta_{ij}\right)^{y_{ij}} \left(1-\theta_{ij}\right)^{1-y_{ij}} \\
+&= \prod_i \prod_j
+\left[
+\frac{\exp\left\{\sum_c z_{ic}\,\boldsymbol{a}_{cj}^{(m_j)} \boldsymbol{\beta}_j^{(m_j)}\right\}}
+{1+\exp\left\{\sum_c z_{ic}\,\boldsymbol{a}_{cj}^{(m_j)} \boldsymbol{\beta}_j^{(m_j)}\right\}}
+\right]^{y_{ij}}
+\left[
+\frac{1}{1+\exp\left\{\sum_c z_{ic}\,\boldsymbol{a}_{cj}^{(m_j)} \boldsymbol{\beta}_j^{(m_j)}\right\}}
+\right]^{1-y_{ij}} \\
+&= \prod_i \prod_j
+\frac{1}{2}
+\int_0^\infty
+\exp\left\{
+\kappa_{ij} \sum_c z_{ic}\,\boldsymbol{a}_{cj}^{(m_j)} \boldsymbol{\beta}_j^{(m_j)}
+- \frac{\omega_{ij}}{2}
+\left(
+\sum_c z_{ic}\,\boldsymbol{a}_{cj}^{(m_j)} \boldsymbol{\beta}_j^{(m_j)}
+\right)^2
+\right\}
+\, p(\omega_{ij}) \, d\omega_{ij}
+\end{align}$$
+
+# Log-Likelihood
+
+$$\begin{align}
+\log \mathcal{L}
+&= \sum_i \sum_j \Bigg[
+y_{ij} \sum_c z_{ic}\,\boldsymbol{a}_{cj}^{(m_j)} \boldsymbol{\beta}_j^{(m_j)}
+- \log\left(
+1 + \exp\left\{\sum_c z_{ic}\,\boldsymbol{a}_{cj}^{(m_j)} \boldsymbol{\beta}_j^{(m_j)}\right\}
+\right)
+\Bigg]
+\end{align}$$
+
+# Full Conditional for $\beta_j^{(m_j)}$
+
+$$\begin{align}
+\boldsymbol{\beta}_j^{(m_j)} \mid \cdot
+\sim
+\mathcal{TN}\left(
+\boldsymbol{\mu}_j^\ast,\;
+\boldsymbol{\Sigma}_j,\;
+\boldsymbol{l}^{(m_j)},\;
+\boldsymbol{u}^{(m_j)}
+\right)
+\end{align}$$
+
+$$\begin{align}
+\boldsymbol{\Sigma}_j
+&=
+\left(
+\tilde{A}_j^\top \Omega_j \tilde{A}_j + \frac{1}{\sigma^2} I
+\right)^{-1} \\
+\boldsymbol{\mu}_j^\ast
+&=
+\boldsymbol{\Sigma}_j
+\left(
+\tilde{A}_j^\top \boldsymbol{\kappa}_j + \frac{1}{\sigma^2} \boldsymbol{\mu}^{(m_j)}
+\right) \\
+\tilde{\boldsymbol{a}}_{ij}
+&= \sum_c z_{ic}\,\boldsymbol{a}_{cj}^{(m_j)} \\
+\tilde{A}_j
+&=
+\begin{bmatrix}
+\tilde{\boldsymbol{a}}_{1j} \\
+\vdots \\
+\tilde{\boldsymbol{a}}_{nj}
+\end{bmatrix} \\
+\Omega_j
+&= \mathrm{diag}(\omega_{1j}, \dots, \omega_{nj}) \\
+\boldsymbol{\kappa}_j
+&=
+\begin{bmatrix}
+y_{1j} - \tfrac{1}{2} \\
+\vdots \\
+y_{nj} - \tfrac{1}{2}
+\end{bmatrix},
+\quad
+\omega_{ij} \sim \mathrm{PG}(1,0)
+\end{align}$$
+
+# Full Conditional for $\boldsymbol{p}$
+
+$$\begin{align}
+\boldsymbol{p} \mid \cdot
+\sim
+\text{Dirichlet}\left(
+\delta_1 + n_1,\;
+\delta_2 + n_2,\;
+\ldots,\;
+\delta_C + n_C
+\right)
+\end{align}$$
+
+$$\begin{align}
+n_c &= \sum_{i} z_{ic}, \quad c = 1,\ldots,C
+\end{align}$$
+
+# Full Conditional for $\boldsymbol{z}_i$
+
+$$\begin{align}
+p(z_{ic} = 1 \mid \cdot)
+&\propto
+p_c \;
+\prod_{j}
+\left[
+\frac{\exp\left\{\boldsymbol{a}_{cj}^{(m_j)} \boldsymbol{\beta}_j^{(m_j)}\right\}}
+{1+\exp\left\{\boldsymbol{a}_{cj}^{(m_j)} \boldsymbol{\beta}_j^{(m_j)}\right\}}
+\right]^{y_{ij}}
+\left[
+\frac{1}{1+\exp\left\{\boldsymbol{a}_{cj}^{(m_j)} \boldsymbol{\beta}_j^{(m_j)}\right\}}
+\right]^{1-y_{ij}}
+\end{align}$$
+
+$$\begin{align}
+p(z_{ic} = 1 \mid \cdot)
+&=
+\frac{
+p_c \;
+\prod_{j}
+\left[
+\frac{\exp\left\{\boldsymbol{a}_{cj}^{(m_j)} \boldsymbol{\beta}_j^{(m_j)}\right\}}
+{1+\exp\left\{\boldsymbol{a}_{cj}^{(m_j)} \boldsymbol{\beta}_j^{(m_j)}\right\}}
+\right]^{y_{ij}}
+\left[
+\frac{1}{1+\exp\left\{\boldsymbol{a}_{cj}^{(m_j)} \boldsymbol{\beta}_j^{(m_j)}\right\}}
+\right]^{1-y_{ij}}
+}{
+\sum_{c'=1}^C
+p_{c'} \;
+\prod_{j}
+\left[
+\frac{\exp\left\{\boldsymbol{a}_{c'j}^{(m_j)} \boldsymbol{\beta}_j^{(m_j)}\right\}}
+{1+\exp\left\{\boldsymbol{a}_{c'j}^{(m_j)} \boldsymbol{\beta}_j^{(m_j)}\right\}}
+\right]^{y_{ij}}
+\left[
+\frac{1}{1+\exp\left\{\boldsymbol{a}_{c'j}^{(m_j)} \boldsymbol{\beta}_j^{(m_j)}\right\}}
+\right]^{1-y_{ij}}
+}
+\end{align}$$
+
+# Full Conditional for $\omega_{ij}$
+
+$$\begin{align}
+\omega_{ij} \mid \cdot
+\sim
+\mathrm{PG}\left(
+1,\;
+\sum_{c} z_{ic}\,\boldsymbol{a}_{cj}^{(m_j)} \boldsymbol{\beta}_j^{(m_j)}
+\right)
+\end{align}$$
+
+$$\begin{align}
+\psi_{ij}
+&=
+\sum_{c} z_{ic}\,\boldsymbol{a}_{cj}^{(m_j)} \boldsymbol{\beta}_j^{(m_j)}
+\end{align}$$
+
+# Full Conditional for $m_j$
+
+$$\begin{align}
+p(m_j = m \mid \cdot)
+&\propto
+\pi_m \;
+p\!\left(\boldsymbol{\beta}_j^{(m)} \mid m_j = m\right)
+\prod_i
+\left[
+\frac{\exp\left\{\sum_c z_{ic}\,\boldsymbol{a}_{cj}^{(m)} \boldsymbol{\beta}_j^{(m)}\right\}}
+{1+\exp\left\{\sum_c z_{ic}\,\boldsymbol{a}_{cj}^{(m)} \boldsymbol{\beta}_j^{(m)}\right\}}
+\right]^{y_{ij}}
+\left[
+\frac{1}{1+\exp\left\{\sum_c z_{ic}\,\boldsymbol{a}_{cj}^{(m)} \boldsymbol{\beta}_j^{(m)}\right\}}
+\right]^{1-y_{ij}}
+\end{align}$$
