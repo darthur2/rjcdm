@@ -5,9 +5,10 @@ Version: 1.0
 Date: 2026-03-31
 Author: David Arthur
 Maintainer: David Arthur <dbarthur@uw.edu>
-Description: Performs model selection of CDMs using reversible jump MCMC
+Description: Performs model selection of CDMs using reversible jump MCMC. This can be used to select between the G-DINA, ACDM, DINA, and DINO models while incorporating prior information about model parameters.
 License: GPL (>= 2)
-Imports: Rcpp (>= 1.1.0), stats, tmvtnorm, pgdraw
+Imports: Rcpp (>= 1.1.0), stats, tmvtnorm, pgdraw, utils
 LinkingTo: Rcpp, RcppEigen
 URL: https://github.com/darthur2/rjcdm
 BugReports: https://github.com/darthur2/rjcdm/issues
+RoxygenNote: 7.3.3

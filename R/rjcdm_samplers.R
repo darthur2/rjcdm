@@ -4,6 +4,7 @@ sample_m <- function(Y,
                      Beta,
                      Beta_prior,
                      m,
+                     bounds,
                      K_vec,
                      pi_m,
                      j_free, 
@@ -96,9 +97,8 @@ sample_m_j <- function(Y,
                              K_j)
   
   log_accept <- (lp_m_j_star + ld_u_j) - (lp_m_j + ld_u_j_star)
-  log_accept
 
-  if (log(runif(1)) < log_accept){
+  if (log(stats::runif(1)) < log_accept){
     beta_j <- beta_j_star
     m_j <- m_j_star
   }
@@ -112,8 +112,11 @@ sample_Beta <- function(Y,
                         A,
                         m,
                         Omega,
+                        Beta,
                         Beta_prior,
                         bounds){
+  
+  J <- ncol(Y)
   
   for (j in 1:J){
     Beta[[j]] <- sample_beta_j(Y, Z, A, m, Omega, Beta_prior, bounds, j)
@@ -184,7 +187,7 @@ sample_p <- function(Z , delta){
   
   delta_star <- colSums(Z) + delta
   
-  x <- rgamma(CC, delta_star)
+  x <- stats::rgamma(CC, delta_star)
   
   p <- x/sum(x)
   
